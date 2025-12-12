@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Календарь ЗП (Казахстан)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        :root {
+            color-scheme: dark;
+            --menuSize: 280px;
+            --itemSize: 52px;
+        }
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: #020617;
+            color: #e5e7eb;
+            margin: 0;
+            padding: 12px;
+            display: flex;
+            justify-content: center;
+        }
+        .app {
+            width: 100%;
+            max-width: 520px;
+        }
+        h1 {
+            font-size: 20px;
+            margin: 4px 0 2px;
+        }
+        .subtitle {
+            font-size: 12px;
+            color: #9ca3af;
+            margin-bottom: 10px;
+        }
+        .card {
+            background: #020617;
+            border-radius: 16px;
+            padding: 12px;
+            box-shadow: 0 16px 32px rgba(0,0,0,0.5);
+            margin-bottom: 10px;
+            border: 1px solid #111827;
+        }
+        .card-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #a5b4fc;
+        }
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+        }
+        @media (max-width: 480px) {
+            .calendar-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+        .day {
+            background: #020617;
+            border-radius: 12px;
+            padding: 8px 6px;
+            border: 1px solid #111827;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            min-height: 80px;
+        }
+        .day-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+            color: #9ca3af;
+        }
+        .day-number {
+            font-weight: 600;
+            color: #e5e7eb;
+            font-size: 13px;
+        }
+        .day-tag {
+            font-size: 10px;
+            padding: 2px 7px;
+            border-radius: 999px;
+        }
+        .tag-advance {
+            background: rgba(56,189,248,0.15);
+            color: #38bdf8;
+        }
+        .tag-salary {
+            background: rgba(74,222,128,0.15);
+            color: #4ade80;
+        }
+        .day input {
+            width: 100%;
+            border-radius: 10px;
+            border: 1px solid #111827;
+            background: #020617;
+            color: #e5e7eb;
+            padding: 8px 8px;
+            font-size: 13px;
+            text-align: center;
+            cursor: pointer;
+        }
+        .day input:focus {
+            outline: none;
+            border-color: #22c55e;
+        }
+        label {
+            font-size: 12px;
+            display: block;
+            margin-bottom: 3px;
+        }
+        input[type="number"], select {
+            width: 100%;
+            padding: 7px 9px;
+            border-radius: 10px;
+            border: 1px solid #111827;
+            background: #020617;
+            color: #e5e7eb;
+            font-size: 13px;
+        }
+        input[type="number"]:focus, select:focus {
+            outline: none;
+            border-color: #22c55e;
+        }
+        .row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        .row > div {
+            flex: 1;
+        }
+        .toggle-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            margin-bottom: 6px;
+        }
+        .toggle-row span {
+            font-weight: 500;
+        }
+        .results {
+            font-size: 13px;
+        }
+        .block {
+            margin-bottom: 8px;
+            padding-bottom: 6px;
+            border-bottom: 1px dashed #1f2937;
+        }
+        .block:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+            margin-bottom: 0;
+        }
+        .block-header {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .line {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 2px;
+        }
+        .line span:last-child {
+            font-weight: 500;
+        }
+        .accent-advance {
+            color: #38bdf8;
+        }
+        .accent-salary {
+            color: #4ade80;
+        }
+        .strong {
+            font-weight: 700;
+        }
+        .small {
+            font-size: 11px;
+            color: #6b7280;
+            margin-top: 6px;
+            line-height: 1.35;
+        }
+        button {
+            width: 100%;
+            padding: 8px;
+            border-radius: 10px;
+            border: none;
+            background: #4b5563;
+            color: #e5e7eb;
+            font-size: 13px;
+            margin-top: 4px;
+        }
+        button:active {
+            filter: brightness(0.9);
+        }
+
+        /* === Радильное меню из твоего примера === */
+        .radial-menu {
+            position: fixed;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%) scale(0.1);
+            width: var(--menuSize);
+            height: var(--menuSize);
+            border-radius: 50%;
+            background: rgba(15,23,42,0.97);
+            box-shadow: 0 12px 30px rgba(0,0,0,0.45);
+            opacity: 0;
+            pointer-events: none;
+            transition: transform 0.25s ease, opacity 0.25s ease;
+            z-index: 50;
+        }
+        .radial-menu.active {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+            pointer-events: auto;
+        }
+        .menu-item {
+            position: absolute;
+            width: var(--itemSize);
+            height: var(--itemSize);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #2563eb;
+            color: #fff;
+            border-radius: 50%;
+            font-size: 1.05em;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+            transition: transform 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease, opacity 0.2s ease;
+            opacity: 0;
+            transform: scale(0.1);
+            -webkit-tap-highlight-color: transparent;
+            pointer-events: auto;
+        }
+        .radial-menu.active .menu-item {
+            opacity: 1;
+            transform: scale(1);
+        }
+        .menu-item:hover {
+            background: #1d4ed8;
+            transform: scale(1.08);
+        }
+        .menu-item.dots {
+            font-size: 1.4em;
+            background: #22c55e;
+        }
+        .menu-item.dots:hover {
+            background: #16a34a;
+        }
+        .backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.35);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+            z-index: 40;
+        }
+        .backdrop.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+    </style>
+</head>
+<body>
+<div class="app">
+    <div class="card">
+        <h1>Календарь зарплаты</h1>
+    </div>
+
+    <div class="card">
+        <div class="card-title">
+            <span>Часы по дням</span>
+            <span id="totalHoursLabel" style="font-size:12px;color:#9ca3af;"></span>
+        </div>
+        <div id="calendar" class="calendar-grid"></div>
+        <div class="small">
+            Подсказка: укажи только те дни, когда реально работал. Часы сохранятся в памяти телефона.
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">
+            <span>Настройки</span>
+        </div>
+        <div class="toggle-row">
+            <span>Тип сотрудника:</span>
+            <select id="personType">
+                <option value="student">Студент (ОСМС = 0%)</option>
+                <option value="worker">Обычный работник (ОСМС = 2%)</option>
+            </select>
+        </div>
+
+        <div class="row">
+            <div>
+                <label for="rate">Ставка, тг/час</label>
+                <input type="number" id="rate" value="1129.27" step="0.01">
+            </div>
+            <div>
+                <label for="mrp">МРП, тг (2025: 3932)</label>
+                <input type="number" id="mrp" value="3932" step="1">
+            </div>
+        </div>
+
+        <button id="resetBtn">Сбросить все часы</button>
+
+        <div class="small">
+            МРП и ставка тоже сохраняются. Если что-то поменяется – просто подправь значения.
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">
+            <span>Результат</span>
+        </div>
+        <div id="results" class="results"></div>
+        <div class="small">
+            Модель: ОПВ 10%, ИПН 10% от базы (грязная − ОПВ − ОСМС − 14×МРП).
+            Аванс – удерживается только пенсионка, налоги и ОСМС добираются с зарплаты.
+        </div>
+    </div>
+</div>
+
+<!-- Радильное меню и фон -->
+<div id="radialMenu" class="radial-menu"></div>
+<div id="backdrop" class="backdrop" aria-hidden="true"></div>
+
+<script>
+    const DAYS_IN_MONTH = 31;
+    const STORAGE_KEY = "kz_salary_calendar_v2";
+
+    function fmt(num) {
+        return num.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+    }
+
+    function loadState() {
+        try {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if (!raw) {
+                return {
+                    hours: Array(DAYS_IN_MONTH).fill(0),
+                    rate: 1129.27,
+                    mrp: 3932,
+                    personType: "student"
+                };
+            }
+            const parsed = JSON.parse(raw);
+            return {
+                hours: Array.isArray(parsed.hours) && parsed.hours.length === DAYS_IN_MONTH
+                    ? parsed.hours.map(v => Number(v) || 0)
+                    : Array(DAYS_IN_MONTH).fill(0),
+                rate: Number(parsed.rate) || 1129.27,
+                mrp: Number(parsed.mrp) || 3932,
+                personType: parsed.personType === "worker" ? "worker" : "student"
+            };
+        } catch (e) {
+            return {
+                hours: Array(DAYS_IN_MONTH).fill(0),
+                rate: 1129.27,
+                mrp: 3932,
+                personType: "student"
+            };
+        }
+    }
+
+    function saveState(state) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    const state = loadState();
+
+    // ==== Радильное меню (адаптация твоего кода) ====
+    const radialMenu = document.getElementById('radialMenu');
+    const backdrop = document.getElementById('backdrop');
+    let activeDayIndex = null;
+    let activeInput = null;
+
+    const itemCount = 11; // 1..10 + ...
+    const radius = 110;
+    const itemSize = 52;
+
+    function initializeRadialMenu() {
+        radialMenu.innerHTML = '';
+
+        const menuValues = [0, ...[...Array(10).keys()].map(i => i + 1)];
+
+        menuValues.forEach((value, index) => {
+            const angle = (360 / itemCount) * index - 90;
+            const rad = angle * (Math.PI / 180);
+
+            const x = radius * Math.cos(rad);
+            const y = radius * Math.sin(rad);
+
+            const item = document.createElement('div');
+            item.className = 'menu-item';
+            item.textContent = value;
+
+            item.style.left = `calc(50% + ${x - itemSize / 2}px)`;
+            item.style.top  = `calc(50% + ${y - itemSize / 2}px)`;
+            item.style.transitionDelay = `${index * 0.03}s`;
+            if (value === '...') item.classList.add('dots');
+
+            item.addEventListener('click', (e) => {
+                e.stopPropagation();
+                handleSelection(value);
+            });
+
+            radialMenu.appendChild(item);
+        });
+    }
+
+    function showMenu() {
+        radialMenu.classList.add('active');
+        backdrop.classList.add('active');
+    }
+
+    function hideMenu() {
+        radialMenu.classList.remove('active');
+        backdrop.classList.remove('active');
+        activeDayIndex = null;
+        activeInput = null;
+    }
+
+    function handleSelection(value) {
+        if (activeDayIndex === null) {
+            hideMenu();
+            return;
+        }
+
+        let finalValue = 0;
+
+        if (value === '...') {
+            const current = state.hours[activeDayIndex] || 0;
+            const manual = prompt('Введите количество часов для дня ' + (activeDayIndex + 1), current ? String(current) : '');
+            if (manual === null) {
+                hideMenu();
+                return;
+            }
+            const valNum = parseFloat(manual.replace(',', '.'));
+            finalValue = (Number.isFinite(valNum) && valNum >= 0) ? valNum : 0;
+        } else {
+            finalValue = Number(value);
+            if (!Number.isFinite(finalValue) || finalValue < 0) finalValue = 0;
+        }
+
+        state.hours[activeDayIndex] = finalValue;
+        if (activeInput) {
+            activeInput.value = finalValue ? finalValue : '';
+        }
+        saveState(state);
+        recalc();
+        hideMenu();
+    }
+
+    backdrop.addEventListener('click', hideMenu);
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && radialMenu.classList.contains('active')) {
+            hideMenu();
+        }
+    });
+
+    function openRadialForDay(dayIndex, inputEl) {
+        activeDayIndex = dayIndex;
+        activeInput = inputEl;
+        showMenu();
+    }
+
+    // ==== Построение календаря ====
+    function buildCalendar() {
+        const cal = document.getElementById("calendar");
+        cal.innerHTML = "";
+        for (let d = 1; d <= DAYS_IN_MONTH; d++) {
+            const wrapper = document.createElement("div");
+            wrapper.className = "day";
+
+            const header = document.createElement("div");
+            header.className = "day-header";
+
+            const num = document.createElement("div");
+            num.className = "day-number";
+            num.textContent = d;
+
+            const tag = document.createElement("div");
+            const isAdvance = d <= 15;
+            tag.className = "day-tag " + (isAdvance ? "tag-advance" : "tag-salary");
+            tag.textContent = isAdvance ? "аванс" : "зп";
+
+            header.appendChild(num);
+            header.appendChild(tag);
+
+            const input = document.createElement("input");
+            input.type = "text";
+            input.readOnly = true;
+            input.placeholder = "часы";
+            const val = state.hours[d - 1] || 0;
+            input.value = val ? val : "";
+            input.dataset.day = String(d);
+            input.addEventListener("click", () => {
+                openRadialForDay(d - 1, input);
+            });
+
+            wrapper.appendChild(header);
+            wrapper.appendChild(input);
+            cal.appendChild(wrapper);
+        }
+    }
+
+    function attachSettings() {
+        const rateInput = document.getElementById("rate");
+        const mrpInput = document.getElementById("mrp");
+        const personSelect = document.getElementById("personType");
+        const resetBtn = document.getElementById("resetBtn");
+
+        rateInput.value = state.rate;
+        mrpInput.value = state.mrp;
+        personSelect.value = state.personType;
+
+        rateInput.addEventListener("input", () => {
+            state.rate = parseFloat(rateInput.value.replace(",", ".")) || 0;
+            saveState(state);
+            recalc();
+        });
+
+        mrpInput.addEventListener("input", () => {
+            state.mrp = parseFloat(mrpInput.value.replace(",", ".")) || 0;
+            saveState(state);
+            recalc();
+        });
+
+        personSelect.addEventListener("change", () => {
+            state.personType = personSelect.value === "worker" ? "worker" : "student";
+            saveState(state);
+            recalc();
+        });
+
+        resetBtn.addEventListener("click", () => {
+            if (!confirm("Точно обнулить все часы за месяц?")) return;
+            state.hours = Array(DAYS_IN_MONTH).fill(0);
+            saveState(state);
+            document.querySelectorAll("#calendar input").forEach((inp) => inp.value = "");
+            recalc();
+        });
+    }
+
+    function recalc() {
+        const rate = Number(state.rate) || 0;
+        const mrp = Number(state.mrp) || 0;
+        const hours = state.hours;
+
+        const OPV_RATE = 0.10;
+        const IIN_RATE = 0.10;
+        const OSMS_RATE = state.personType === "worker" ? 0.02 : 0.00;
+        const STD_DED = 14 * mrp;
+
+        let hoursA = 0;
+        let hoursS = 0;
+        for (let i = 0; i < DAYS_IN_MONTH; i++) {
+            if (i < 15) hoursA += hours[i] || 0;
+            else hoursS += hours[i] || 0;
+        }
+        const totalHours = hoursA + hoursS;
+
+        const grossA = hoursA * rate;
+        const grossS = hoursS * rate;
+        const grossTotal = grossA + grossS;
+
+        const opvA = grossA * OPV_RATE;
+        const opvS = grossS * OPV_RATE;
+        const opvTotal = opvA + opvS;
+
+        const osmsTotal = grossTotal * OSMS_RATE;
+
+        let taxBase = grossTotal - opvTotal - osmsTotal - STD_DED;
+        if (taxBase < 0) taxBase = 0;
+        const iinTotal = taxBase * IIN_RATE;
+
+        const netAdvance = grossA - opvA;
+        let netSalary = grossS - opvS - osmsTotal - iinTotal;
+        if (netSalary < 0) netSalary = 0;
+
+        const netTotal = netAdvance + netSalary;
+        const totalWithheld = opvTotal + osmsTotal + iinTotal;
+        const effRate = grossTotal > 0 ? (totalWithheld / grossTotal * 100) : 0;
+
+        const totalLabel = document.getElementById("totalHoursLabel");
+        totalLabel.textContent = totalHours > 0
+            ? `Всего часов: ${totalHours.toFixed(1)} (аванс ${hoursA.toFixed(1)}, зп ${hoursS.toFixed(1)})`
+            : "";
+
+        const res = document.getElementById("results");
+        if (grossTotal === 0) {
+            res.innerHTML = "<span style='font-size:13px;color:#9ca3af;'>Заполни часы – и здесь появится расчёт.</span>";
+            return;
+        }
+
+        res.innerHTML = `
+        <div class="block">
+          <div class="block-header">
+            <span class="accent-advance">Аванс (1–15)</span>
+            <span>${hoursA.toFixed(1)} ч</span>
+          </div>
+          <div class="line"><span>Начислено (грязная):</span><span>${fmt(grossA)} тг</span></div>
+          <div class="line"><span>Пенсионка 10%:</span><span>- ${fmt(opvA)} тг</span></div>
+          <div class="line"><span>ИПН / ОСМС:</span><span>0 тг (удерживаются с зарплаты)</span></div>
+          <div class="line"><span class="strong">👉 На руки аванс:</span><span class="accent-advance strong">${fmt(netAdvance)} тг</span></div>
+        </div>
+
+        <div class="block">
+          <div class="block-header">
+            <span class="accent-salary">Зарплата (16–конец)</span>
+            <span>${hoursS.toFixed(1)} ч</span>
+          </div>
+          <div class="line"><span>Начислено (грязная):</span><span>${fmt(grossS)} тг</span></div>
+          <div class="line"><span>Пенсионка 10%:</span><span>- ${fmt(opvS)} тг</span></div>
+          <div class="line"><span>ОСМС с работника:</span><span>- ${fmt(osmsTotal)} тг</span></div>
+          <div class="line"><span>ИПН 10% за месяц:</span><span>- ${fmt(iinTotal)} тг</span></div>
+          <div class="line"><span class="strong">👉 На руки зарплата:</span><span class="accent-salary strong">${fmt(netSalary)} тг</span></div>
+        </div>
+
+        <div class="block">
+          <div class="block-header">
+            <span>Итого за месяц</span>
+          </div>
+          <div class="line"><span>Грязная зарплата:</span><span>${fmt(grossTotal)} тг</span></div>
+          <div class="line"><span>Всего удержано:</span><span>${fmt(totalWithheld)} тг (~${effRate.toFixed(1)}%)</span></div>
+          <div class="line"><span>Пенсионка (ОПВ):</span><span>${fmt(opvTotal)} тг</span></div>
+          <div class="line"><span>ИПН:</span><span>${fmt(iinTotal)} тг</span></div>
+          <div class="line"><span>ОСМС с работника:</span><span>${fmt(osmsTotal)} тг</span></div>
+          <div class="line"><span class="strong">💰 На руки за месяц (РАСЧЕТЫ ПРИМЕРНЫЕ):</span><span class="strong">${fmt(netTotal)} тг</span></div>
+        </div>
+      `;
+    }
+
+    initializeRadialMenu();
+    buildCalendar();
+    attachSettings();
+    recalc();
+</script>
+</body>
+</html>
