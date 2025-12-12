@@ -9,6 +9,10 @@
     <meta name="apple-mobile-web-app-title" content="Календарь ЗП">
     <link rel="apple-touch-icon" href="icon.png">
     <style>
+        .day.today {
+          border: 2px solid #22c55e;
+          background: rgba(34, 197, 94, 0.12);
+        }
         :root {
             color-scheme: dark;
             --menuSize: 280px;
@@ -480,12 +484,20 @@
         showMenu();
     }
 
-    function buildCalendar() {
-        const cal = document.getElementById("calendar");
-        cal.innerHTML = "";
-        for (let d = 1; d <= DAYS_IN_MONTH; d++) {
-            const wrapper = document.createElement("div");
-            wrapper.className = "day";
+            function buildCalendar() {
+              const cal = document.getElementById("calendar");
+              cal.innerHTML = "";
+            
+              const today = new Date().getDate(); // текущий день месяца
+            
+              for (let d = 1; d <= DAYS_IN_MONTH; d++) {
+                const wrapper = document.createElement("div");
+            
+                if (d === today) {
+                  wrapper.className = "day today";
+                } else {
+                  wrapper.className = "day";
+                }
 
             const header = document.createElement("div");
             header.className = "day-header";
